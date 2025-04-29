@@ -1,46 +1,30 @@
-import { StoryblokStory } from "@storyblok/react/rsc";
-import { RecommendedTour } from "@/components/RecommendedTour";
-import { draftMode } from "next/headers";
+// src/app/tours/page.tsx
 import { getStoryblokApi } from "@/storyblok";
-
-const fetchToursPage = async () => {
-  const { isEnabled } = await draftMode();
-  const client = getStoryblokApi();
-  const response = await client.getStory(`tours`, {
-    version:
-      process.env.NODE_ENV === "development" || isEnabled
-        ? "draft"
-        : "published",
-  });
-  return response.data.story;
-};
+import { RecommendedTour } from "@/components/RecommendedTour";
 
 const fetchAllTours = async () => {
-  const { isEnabled } = await draftMode();
   const client = getStoryblokApi();
-  const response = await client.getStories({
-    content_type: "tour",
-    version:
-      process.env.NODE_ENV === "development" || isEnabled
-        ? "draft"
-        : "published",
+  const { data } = await client.get("cdn/stories", {
+    version: process.env.NODE_ENV === "development" ? "draft" : "published",
+    starts_with: "tours/",
+    is_startpage: false,
   });
-  return response.data.stories;
+  return data.stories;
 };
 
 const ToursPage = async () => {
-  const story = await fetchToursPage();
   const tours = await fetchAllTours();
 
   return (
-    <div>
-      <StoryblokStory story={story} />
-      <div className="grid md:grid-cols-2 gap-8 container mx-auto px-4 w-full py-16">
-        {tours.map((tour) => (
-          <RecommendedTour story={tour} key={tour.content._uid} />
+    <main className="p-6">
+      <h1 className="text-3xl font-bold mb-8">All Tours</h1>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {tours.map((tour: any) => (
+          <RecommendedTour story={tour} key={tour.uuid} />
         ))}
       </div>
-    </div>
+    </main>
   );
 };
+
 export default ToursPage;
